@@ -1,6 +1,17 @@
-@proyecto_final_prog2.Api_HostAddress = http://localhost:5227
+@proyecto_final_prog2_api_hostaddress = http://localhost:5227
 
-GET {{proyecto_final_prog2.Api_HostAddress}}/weatherforecast/
+GET {{proyecto_final_prog2_api_hostaddress}}/weatherforecast/
 Accept: application/json
+
+###
+#@projectUrl = http://localhost:5227
+#GET {{projectUrl}}/api/Test
+
+###
+#@projectUrl = http://localhost:5227
+#GET {{projectUrl}}/api/Test?t=test
+#Accept: Application/json
+#Content-Type: application/json
+
 
 ###
