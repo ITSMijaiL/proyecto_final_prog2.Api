@@ -39,9 +39,9 @@ namespace proyecto_final_prog2.Api.Controllers
                     title = taskModel.title
                 };
 
-                _context.tasks.Add(t);
+                _context.tasks.Add(tsk);
                 await _context.SaveChangesAsync();
-                return CreatedAtRoute("CreateTask", new {id = t.ID}, t);
+                return CreatedAtRoute("CreateTask", new {id = tsk.ID}, tsk);
                 //return Ok();
             }
             return BadRequest(ModelState);
