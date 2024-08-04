@@ -1,9 +1,11 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using proyecto_final_prog2.Infrastructure;
-using proyecto_final_prog2.Domain;
-using proyecto_final_prog2.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using proyecto_final_prog2.Application.Services;
+using proyecto_final_prog2.Domain.Entities;
+using proyecto_final_prog2.Application.Dtos.Tags;
+using proyecto_final_prog2.Infrastructure.Models;
 
 namespace proyecto_final_prog2.Api.Controllers
 {
@@ -12,21 +14,28 @@ namespace proyecto_final_prog2.Api.Controllers
     public class TagsController : ControllerBase
     {
         private readonly ILogger<TagsController> _logger;
-        private readonly AppDBContext _context;
-        public TagsController(ILogger<TagsController> logger, AppDBContext context)
+        private readonly TagService _service;
+
+        public TagsController(ILogger<TagsController> logger, TagService service)
         {
             _logger = logger;
-            _context = context;
+            _service = service;
         }
 
         [HttpGet(Name = "GetTags")]
-        public IEnumerable<Domain.Entities.Tag> Get()
+        public async Task<IEnumerable<Tag>> Get()
         {
-            return _context.tags.ToList();
+            return await _service.GetTags();
+        }
+
+        [HttpGet("{id}", Name = "GetTag")]
+        public async Task<IndexTagDto?> Get(int id)
+        {
+            return await _service.GetTag(id);
         }
 
         [HttpPost(Name = "CreateTag")]
-        public async Task<IActionResult> CreateTag([FromBody] Tag tagModel)
+        public async Task<IActionResult> CreateTag([FromBody] TagModel tagModel)
         {
             if (tagModel == null)
             {
@@ -34,18 +43,13 @@ namespace proyecto_final_prog2.Api.Controllers
             }
             if (ModelState.IsValid)
             {
-                Tag tag = new Tag
-                {
-                    tag_name = tagModel.tag_name,
-                };
 
-                if (await _context.tags.AnyAsync(t => t.tag_name == tagModel.tag_name))
+                if (await _service.TagExistsByName(tagModel.tag_name))
                 {
                     return BadRequest("This tag already exists!");
                 }
 
-                _context.tags.Add(tag);
-                await _context.SaveChangesAsync();
+                Tag tag = await _service.CreateTag(new CreateTagDto { tag_name = tagModel.tag_name});
                 return CreatedAtRoute("CreateTag", new { id = tag.ID }, tag);
                 //return Ok();
             }
@@ -53,25 +57,21 @@ namespace proyecto_final_prog2.Api.Controllers
         }
 
         [HttpPut("{id}", Name = "UpdateTag")]
-        public async Task<IActionResult> UpdateTag(int id, [FromBody] Tag tagModel)
+        public async Task<IActionResult> UpdateTag(int id, [FromBody] TagModel tagModel)
         {
             if (tagModel == null)
             {
                 return BadRequest("Tag's data is invalid.");
             }
-            Tag? tag = await _context.FindAsync<Tag>(id);
-            if (tag == null)
+            IndexTagDto? tagdto = await _service.GetTag(id);
+            if (tagdto == null)
             {
                 return NotFound("Tag not found!");
             }
 
             if (ModelState.IsValid)
             {
-                tag.tag_name = tagModel.tag_name;
-                tag.tasks = tagModel.tasks;
-
-                _context.tags.Update(tag);
-                await _context.SaveChangesAsync();
+                Tag? tag = await _service.UpdateTag(id, new UpdateTagDto { tag_name=tagModel.tag_name });
                 return Ok(tag);
             }
 
@@ -81,14 +81,13 @@ namespace proyecto_final_prog2.Api.Controllers
         [HttpDelete("{id}", Name = "DeleteTag")]
         public async Task<IActionResult> DeleteTag(int id)
         {
-            Tag? tag = await _context.FindAsync<Tag>(id);
-            if (tag == null)
+            IndexTagDto? tagdto = await _service.GetTag(id);
+            if (tagdto == null)
             {
                 return NotFound("Tag not found!");
             }
 
-            _context.tags.Remove(tag);
-            await _context.SaveChangesAsync();
+            await _service.DeleteTag(id);
             return Ok("Tag deleted.");
         }
     }

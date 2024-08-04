@@ -1,9 +1,10 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using proyecto_final_prog2.Domain.Entities;
-using proyecto_final_prog2.Infrastructure;
+using proyecto_final_prog2.Application.Services;
 using proyecto_final_prog2.Infrastructure.Models;
+using proyecto_final_prog2.Application.Dtos.Tasks;
+using proyecto_final_prog2.Application.Dtos.Tags;
 
 namespace proyecto_final_prog2.Api.Controllers
 {
@@ -12,35 +13,35 @@ namespace proyecto_final_prog2.Api.Controllers
     public class TasksController : ControllerBase
     {
         private readonly ILogger<TasksController> _logger;
-        private readonly AppDBContext _context;
-        public TasksController(ILogger<TasksController> logger, AppDBContext context)
+        private readonly TaskService _service;
+        public TasksController(ILogger<TasksController> logger, TaskService service)
         {
             _logger = logger;
-            _context = context;
+            _service = service;
         }
         
         [HttpGet(Name = "GetTasks")]
-        public IEnumerable<Domain.Entities.Task> Get()
+        public async Task<IEnumerable<Domain.Entities.Task>> Get()
         {
-            return _context.tasks.ToList();
+            return await _service.GetTasks();
+        }
+        [HttpGet("{id}",Name = "GetTasksFromColumn")]
+        //public async Task<IndexTaskDto?> Get(int id)
+        public async Task<IEnumerable<Domain.Entities.Task>> Get(int id)
+        {
+            return await _service.GetTasksFromColumn(id);
         }
 
-        [HttpPost(Name = "CreateTask")]
-        public async Task<IActionResult> CreateTask([FromBody] Domain.Entities.Task taskModel) {
+        [HttpPost("{column_id}", Name = "CreateTask")]
+        public async Task<IActionResult> CreateTask([FromBody] TaskModel taskModel, int column_id) {
             if (taskModel == null)
             {
                 return BadRequest("Task's data is invalid.");
             }
             if (ModelState.IsValid)
             {
-                Domain.Entities.Task tsk = new Domain.Entities.Task
-                {
-                    text = taskModel.text,
-                    title = taskModel.title
-                };
+                Domain.Entities.Task tsk = await _service.CreateTask(new CreateTaskDto { text = taskModel.text, title = taskModel.title}, column_id);
 
-                _context.tasks.Add(tsk);
-                await _context.SaveChangesAsync();
                 return CreatedAtRoute("CreateTask", new {id = tsk.ID}, tsk);
                 //return Ok();
             }
@@ -48,26 +49,20 @@ namespace proyecto_final_prog2.Api.Controllers
         }
 
         [HttpPut("{id}",Name = "UpdateTask")]
-        public async Task<IActionResult> UpdateTask(int id, [FromBody] Domain.Entities.Task taskModel)
+        public async Task<IActionResult> UpdateTask(int id, [FromBody] TaskModel taskModel)
         {
             if (taskModel == null) 
             {
                 return BadRequest("Task's data is invalid.");
             }
-            Domain.Entities.Task? task = await _context.FindAsync<Domain.Entities.Task>(id);
-            if (task == null)
-            {
-                return NotFound("Task not found!");
-            }
 
             if (ModelState.IsValid)
             {
-                task.text = taskModel.text;
-                task.title = taskModel.title;
-                task.tags = taskModel.tags;
-
-                _context.tasks.Update(task);
-                await _context.SaveChangesAsync();
+                Domain.Entities.Task? task = await _service.UpdateTask(id, new UpdateTaskDto { text = taskModel.text, title = taskModel.title });
+                if (task == null)
+                {
+                    return NotFound("Task not found!");
+                }
                 return Ok(task);
             }
 
@@ -77,16 +72,9 @@ namespace proyecto_final_prog2.Api.Controllers
         [HttpDelete("{id}", Name = "DeleteTask")]
         public async Task<IActionResult> DeleteTask(int id)
         {
-            Domain.Entities.Task? task = await _context.FindAsync<Domain.Entities.Task>(id);
-            if (task == null)
-            {
-                return NotFound("Task not found!");
-            }
-
-            _context.tasks.Remove(task);
-            await _context.SaveChangesAsync();
+            Domain.Entities.Task? task = await _service.DeleteTask(id);
             return Ok("Task deleted.");
         }
-
+        
     }
 }

@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using proyecto_final_prog2.Application.Services;
 using proyecto_final_prog2.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -12,6 +13,9 @@ builder.Services.AddDbContext<AppDBContext>(options => {
         opt.MigrationsAssembly("proyecto_final_prog2.Api"); 
     }*/);
 });
+builder.Services.AddScoped<ColumnService>();
+builder.Services.AddScoped<TagService>();
+builder.Services.AddScoped<TaskService>();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
