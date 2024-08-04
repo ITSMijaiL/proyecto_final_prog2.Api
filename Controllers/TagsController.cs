@@ -28,14 +28,20 @@ namespace proyecto_final_prog2.Api.Controllers
             return await _service.GetTags();
         }
 
-        [HttpGet("{id}", Name = "GetTag")]
+        /*[HttpGet("{id}", Name = "GetTag")]
         public async Task<IndexTagDto?> Get(int id)
         {
             return await _service.GetTag(id);
+        }*/
+
+        [HttpGet("{id}", Name = "GetTagsFromTask")]
+        public async Task<List<Tag>> Get(int id)
+        {
+            return await _service.GetTagsFromTask(id);
         }
 
-        [HttpPost(Name = "CreateTag")]
-        public async Task<IActionResult> CreateTag([FromBody] TagModel tagModel)
+        [HttpPost("{task_id}",Name = "CreateTag")]
+        public async Task<IActionResult> CreateTag([FromBody] TagModel tagModel, int task_id)
         {
             if (tagModel == null)
             {
@@ -49,7 +55,7 @@ namespace proyecto_final_prog2.Api.Controllers
                     return BadRequest("This tag already exists!");
                 }
 
-                Tag tag = await _service.CreateTag(new CreateTagDto { tag_name = tagModel.tag_name});
+                Tag tag = await _service.CreateTag(new CreateTagDto { tag_name = tagModel.tag_name}, task_id);
                 return CreatedAtRoute("CreateTag", new { id = tag.ID }, tag);
                 //return Ok();
             }

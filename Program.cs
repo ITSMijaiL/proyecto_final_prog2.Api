@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using proyecto_final_prog2.Application.Services;
 using proyecto_final_prog2.Infrastructure;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
