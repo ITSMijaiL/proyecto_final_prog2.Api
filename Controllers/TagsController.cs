@@ -40,8 +40,8 @@ namespace proyecto_final_prog2.Api.Controllers
             return await _service.GetTagsFromTask(id);
         }
 
-        [HttpPost("{task_id}",Name = "CreateTag")]
-        public async Task<IActionResult> CreateTag([FromBody] TagModel tagModel, int task_id)
+        [HttpPost(Name = "CreateTag")]
+        public async Task<IActionResult> CreateTag([FromBody] TagModel tagModel)
         {
             if (tagModel == null)
             {
@@ -55,7 +55,7 @@ namespace proyecto_final_prog2.Api.Controllers
                     return BadRequest("This tag already exists!");
                 }
 
-                Tag tag = await _service.CreateTag(new CreateTagDto { tag_name = tagModel.tag_name}, task_id);
+                Tag tag = await _service.CreateTag(new CreateTagDto { tag_name = tagModel.tag_name});
                 return CreatedAtRoute("CreateTag", new { id = tag.ID }, tag);
                 //return Ok();
             }
@@ -95,6 +95,34 @@ namespace proyecto_final_prog2.Api.Controllers
 
             await _service.DeleteTag(id);
             return Ok("Tag deleted.");
+        }
+
+        [HttpPut("Link/{task_id}/{tag_id}", Name = "LinkTag")]
+        public async Task<IActionResult> LinkTag(int task_id, int tag_id)
+        {
+            IndexTagDto? tagdto = await _service.GetTag(tag_id);
+            if (tagdto == null)
+            {
+                return NotFound("Tag not found!");
+            }
+
+
+            await _service.LinkTag(task_id, tag_id);
+            return Ok("Tag linked.");
+        }
+
+        [HttpDelete("{task_id}/{tag_id}", Name = "UnlinkTag")]
+        public async Task<IActionResult> UnlinkTag(int task_id, int tag_id)
+        {
+            IndexTagDto? tagdto = await _service.GetTag(tag_id);
+            if (tagdto == null)
+            {
+                return NotFound("Tag not found!");
+            }
+
+
+            await _service.UnlinkTag(task_id, tag_id);
+            return Ok("Tag unlinked.");
         }
     }
 }

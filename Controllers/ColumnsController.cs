@@ -35,6 +35,14 @@ namespace proyecto_final_prog2.Api.Controllers
             return await _service.GetColumn(id);
         }
 
+        [HttpGet("ID/{title}", Name = "GetColumnIDUsingTitle")]
+        public async Task<int?> Get(string title)
+        {
+            return await _service.GetColumnID(title);
+        }
+
+        //GetColumnID
+
         [HttpPost(Name = "CreateColumn")]
         public async Task<IActionResult> CreateColumn([FromBody] ColumnModel columnModel)
         {
